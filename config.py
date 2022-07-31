@@ -28,17 +28,16 @@ from libqtile import bar, layout, widget
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
-from libqtile.log_utils import logger
 from Spotify import Spotify
 
 import os
 import subprocess
 from libqtile import hook
 
-from subprocess import CompletedProcess, run
+from subprocess import run
 
 
-def toggle_music(qtile):
+def toggle_music():
     run(
         "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
         shell=True,
@@ -199,7 +198,7 @@ layouts = [
 ]
 
 widget_defaults = dict(
-    font="Ubuntu Mono Nerd Font",
+    font="jetbrains mono nerd font",
     fontsize=18,
     padding=3,
 )
@@ -241,7 +240,6 @@ screens = [
         top=bar.Bar(
             [
                 widget.GroupBox(
-                    font="Ubuntu Nerd Font",
                     fontsize=18,
                     margin_y=3,
                     margin_x=6,
