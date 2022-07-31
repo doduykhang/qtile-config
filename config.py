@@ -37,7 +37,7 @@ from libqtile import hook
 from subprocess import run
 
 
-def toggle_music():
+def toggle_music(qtitle):
     run(
         "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
         shell=True,
@@ -58,7 +58,7 @@ musicPlayer = "spotify"
 volumUp = "amixer -q sset Master 5%+"
 volumDown = "amixer -q sset Master 5%-"
 
-#toggleMpd = "mpc toggle"
+# toggleMpd = "mpc toggle"
 toggleMpd = "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
 
 
@@ -204,11 +204,19 @@ widget_defaults = dict(
 )
 extension_defaults = widget_defaults.copy()
 
-bgColor = "#FCC8D9"
-textColor = "#112A45"
-inactiveColor = "#808080"
-highlightColor = "#CC6666"
-fontSize = '18'
+colors = ["#FF7721", "#FF679A", "#00BBDC", "#0077DD"]
+
+bgColor = "#EE1166"
+
+textColor = "#575279"
+# have window open text color
+activeColor = "#ffffff"
+# does not have window open text color
+inactiveColor = "#b3b1b1"
+# border/line color
+highlightColor = colors[1]
+highlightTextColor = "#ffffff"
+fontSize = 18
 
 
 def wrapWidget(widgets, bgColor, icon=""):
@@ -233,7 +241,22 @@ def wrapWidget(widgets, bgColor, icon=""):
     ]
 
 
-colors = ["E23636", "1DB954"]
+def wrapWidget2(widgets, bgColor, fgColor, icon=""):
+    return [
+        widget.TextBox(
+            text=' ',
+            foreground=fgColor,
+            background=bgColor,
+            padding=0,
+            fontsize="30"
+        ),
+        widget.TextBox(
+            text=icon,
+            background=fgColor,
+        ),
+        *widgets,
+    ]
+
 
 screens = [
     Screen(
@@ -246,31 +269,49 @@ screens = [
                     padding_y=7,
                     padding_x=6,
                     borderwidth=4,
-                    active=textColor,
+                    active=activeColor,
+                    # does not have window open text color
                     inactive=inactiveColor,
                     rounded=False,
                     highlight_color=inactiveColor,
                     highlight_method="block",
                     this_current_screen_border=highlightColor,
-                    block_highlight_text_color=textColor,
+                    block_highlight_text_color=highlightTextColor,
                 ),
                 widget.Spacer(),
-                *(wrapWidget(
+
+                *(wrapWidget2(
                     [
                         Spotify(
                             fontsize=fontSize,
                             background=colors[1],
                             format="{artist} - {track}"
                         ),
-                    ], colors[1], ' '
+                    ], '', colors[1], ' '
                 )),
-                *(wrapWidget(
+                *(wrapWidget2(
+                    [
+                        widget.PulseVolume(
+                            fontsize=fontSize,
+                            background=colors[2],
+                        ),
+                    ], colors[1], colors[2], '墳'
+                )),
+                *(wrapWidget2(
+                    [
+                        widget.Battery(
+                            fontsize=fontSize,
+                            background=colors[3],
+                        ),
+                    ], colors[2], colors[3], ''
+                )),
+                *(wrapWidget2(
                     [
                         widget.Clock(
                             format='%d/%m/%y %H:%M',
                             background=colors[0],
                         ),
-                    ], colors[0], ' '
+                    ], colors[3], colors[0], ' '
                 )),
 
             ],
