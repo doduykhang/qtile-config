@@ -46,20 +46,26 @@ def toggle_music(qtitle):
 
 @hook.subscribe.startup_once
 def autostart():
-    home = os.path.expanduser('~/.config/qtile/autostart.sh')
+    home = os.path.expanduser("~/.config/qtile/autostart.sh")
     subprocess.Popen([home])
 
 
 mod = "mod4"
-terminal = guess_terminal()
-browser = "google-chrome"
+terminal = "alacritty"
+browser = "google-chrome-stable"
 promt = "rofi -show run"
-musicPlayer = "spotify"
+musicPlayer = "spotify LD_PRELOAD=/usr/local/lib/spotify-adblock.so"
 volumUp = "amixer -q sset Master 5%+"
 volumDown = "amixer -q sset Master 5%-"
+warpd = "warpd --normal"
+code = "code"
+screenshot = "flameshot gui"
+rofi = "rofi -show drun"
 
 # toggleMpd = "mpc toggle"
-toggleMpd = "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
+toggleMpd = (
+    "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
+)
 
 
 keys = [
@@ -67,25 +73,30 @@ keys = [
     # at https://docs.qtile.org/en/latest/manual/config/lazy.html
     # Switch between windows
     Key([mod], "h", lazy.layout.left(), desc="Move focus to left"),
+    Key([mod], "a", lazy.spawn("sh ~/rely.sh"), desc="Move focus to left"),
     Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
     Key([mod], "j", lazy.layout.next(), desc="Move focus down"),
     Key([mod], "k", lazy.layout.previous(), desc="Move focus up"),
-    Key([mod], "space", lazy.layout.next(),
-        desc="Move window focus to other window"),
+    Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
     # Move windows between left/right columns or move up/down in current stack.
-    # Moving out of range in Columns layout will create new column.
-    Key([mod, "shift"], "h", lazy.layout.shuffle_left(),
-        desc="Move window to the left"),
-    Key([mod, "shift"], "l", lazy.layout.shuffle_right(),
-        desc="Move window to the right"),
+    # Moving out of range in Columns layout will create new coalsamixer lumn.
+    Key(
+        [mod, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"
+    ),
+    Key(
+        [mod, "shift"],
+        "l",
+        lazy.layout.shuffle_right(),
+        desc="Move window to the right",
+    ),
     Key([mod, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
     Key([mod, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
-    # Grow windows. If current window is on the edge of screen and direction
+    # Grow windows. If cjurrent window is on the edge of screen and direction
     # will be to screen edge - window would shrink.
-    Key([mod, "control"], "h", lazy.layout.grow_left(),
-        desc="Grow window to the left"),
-    Key([mod, "control"], "l", lazy.layout.grow_right(),
-        desc="Grow window to the right"),
+    Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
+    Key(
+        [mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"
+    ),
     Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
     Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
     Key([mod], "n", lazy.layout.normalize(), desc="Reset all window sizes"),
@@ -106,11 +117,14 @@ keys = [
     Key([mod], "u", lazy.spawn(volumUp), desc="Volumn up"),
     Key([mod], "i", lazy.spawn(volumDown), desc="Volumn down"),
     Key([mod], "y", lazy.function(toggle_music), desc="Toggle mpd"),
-
     # Toggle between different layouts as defined below
     Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
     Key([mod], "c", lazy.window.kill(), desc="Kill focused window"),
     Key([mod], "t", lazy.reload_config(), desc="Reload the config"),
+    Key([mod], "r", lazy.spawn(warpd), desc="Reload the config"),
+    Key([mod], "e", lazy.spawn(code), desc="Reload the config"),
+    Key([mod], "p", lazy.spawn(screenshot), desc="Reload the config"),
+    Key([mod], "o", lazy.spawn(rofi), desc="Move window focus to other window"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
 ]
 
@@ -118,40 +132,37 @@ keys = [
 
 
 groups = [
-    Group("1",
-          label="一",
-          ),
-
-    Group("2",
-          label="二",
-          ),
-
-    Group("3",
-          label="三",
-          ),
-
-    Group("4",
-          label="四",
-          ),
-
-    Group("5",
-          label="五"),
-
-    Group("6",
-          label="六",
-          ),
-
-    Group("7",
-          label="七",
-          ),
-
-    Group("8",
-          label="八"),
-
-    Group("9",
-          label="九",),
-    Group("0",
-          label="愛"),
+    Group(
+        "1",
+        label="一",
+    ),
+    Group(
+        "2",
+        label="二",
+    ),
+    Group(
+        "3",
+        label="三",
+    ),
+    Group(
+        "4",
+        label="四",
+    ),
+    Group("5", label="五"),
+    Group(
+        "6",
+        label="六",
+    ),
+    Group(
+        "7",
+        label="七",
+    ),
+    Group("8", label="八"),
+    Group(
+        "9",
+        label="九",
+    ),
+    Group("0", label="愛"),
 ]
 
 
@@ -170,8 +181,7 @@ for i in groups:
                 [mod, "shift"],
                 i.name,
                 lazy.window.togroup(i.name, switch_group=True),
-                desc="Switch to & move focused window to group {}".format(
-                    i.name),
+                desc="Switch to & move focused window to group {}".format(i.name),
             ),
             # Or, use below if you prefer not to switch to that group.
             # # mod1 + shift + letter of group = move focused window to group
@@ -181,8 +191,7 @@ for i in groups:
     )
 
 layouts = [
-    layout.Columns(border_focus_stack=[
-                   "#d75f5f", "#8f3d3d"], border_width=4, margin=8),
+    layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4, margin=8),
     layout.Max(margin=8),
     # Try more layouts by unleashing below layouts.
     # layout.Stack(num_stacks=2),
@@ -221,34 +230,20 @@ fontSize = 18
 
 def wrapWidget(widgets, bgColor, icon=""):
     return [
-        widget.TextBox(
-            text='',
-            foreground=bgColor,
-            padding=0,
-            fontsize="30"
-        ),
+        widget.TextBox(text="", foreground=bgColor, padding=0, fontsize="30"),
         widget.TextBox(
             text=icon,
             background=bgColor,
         ),
         *widgets,
-        widget.TextBox(
-            text=' ',
-            foreground=bgColor,
-            padding=0,
-            fontsize="30"
-        ),
+        widget.TextBox(text=" ", foreground=bgColor, padding=0, fontsize="30"),
     ]
 
 
 def wrapWidget2(widgets, bgColor, fgColor, icon=""):
     return [
         widget.TextBox(
-            text=' ',
-            foreground=fgColor,
-            background=bgColor,
-            padding=0,
-            fontsize="30"
+            text=" ", foreground=fgColor, background=bgColor, padding=0, fontsize="30"
         ),
         widget.TextBox(
             text=icon,
@@ -279,41 +274,59 @@ screens = [
                     block_highlight_text_color=highlightTextColor,
                 ),
                 widget.Spacer(),
-
-                *(wrapWidget2(
-                    [
-                        Spotify(
-                            fontsize=fontSize,
-                            background=colors[1],
-                            format="{artist} - {track}"
-                        ),
-                    ], '', colors[1], ' '
-                )),
-                *(wrapWidget2(
-                    [
-                        widget.PulseVolume(
-                            fontsize=fontSize,
-                            background=colors[2],
-                        ),
-                    ], colors[1], colors[2], '墳'
-                )),
-                *(wrapWidget2(
-                    [
-                        widget.Battery(
-                            fontsize=fontSize,
-                            background=colors[3],
-                        ),
-                    ], colors[2], colors[3], ''
-                )),
-                *(wrapWidget2(
-                    [
-                        widget.Clock(
-                            format='%d/%m/%y %H:%M',
-                            background=colors[0],
-                        ),
-                    ], colors[3], colors[0], ' '
-                )),
-
+                *(
+                    wrapWidget2(
+                        [
+                            Spotify(
+                                fontsize=fontSize,
+                                background=colors[1],
+                                format="{artist} - {track}",
+                            ),
+                        ],
+                        "",
+                        colors[1],
+                        " ",
+                    )
+                ),
+                *(
+                    wrapWidget2(
+                        [
+                            widget.PulseVolume(
+                                fontsize=fontSize,
+                                background=colors[2],
+                            ),
+                        ],
+                        colors[1],
+                        colors[2],
+                        "墳",
+                    )
+                ),
+                *(
+                    wrapWidget2(
+                        [
+                            widget.Memory(
+                                fontsize=fontSize,
+                                background=colors[3],
+                            ),
+                        ],
+                        colors[2],
+                        colors[3],
+                        "", 
+                    )
+                ),
+                *(
+                    wrapWidget2(
+                        [
+                            widget.Clock(
+                                format="%d/%m/%y %H:%M",
+                                background=colors[0],
+                            ),
+                        ],
+                        colors[3],
+                        colors[0],
+                        " ",
+                    )
+                ),
             ],
             32,
             opacity=0.95,
@@ -325,10 +338,15 @@ screens = [
 
 # Drag floating layouts.
 mouse = [
-    Drag([mod], "Button1", lazy.window.set_position_floating(),
-         start=lazy.window.get_position()),
-    Drag([mod], "Button3", lazy.window.set_size_floating(),
-         start=lazy.window.get_size()),
+    Drag(
+        [mod],
+        "Button1",
+        lazy.window.set_position_floating(),
+        start=lazy.window.get_position(),
+    ),
+    Drag(
+        [mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()
+    ),
     Click([mod], "Button2", lazy.window.bring_to_front()),
 ]
 
