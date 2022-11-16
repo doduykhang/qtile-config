@@ -24,12 +24,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from libqtile import bar, layout,  qtile, widget
-from libqtile.config import Click, Drag, Group, Key, KeyChord, Match, Screen
+from libqtile import bar, layout, widget
+from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 from Spotify import Spotify
-from Image import Image
 
 import os
 import subprocess
@@ -53,7 +52,7 @@ def autostart():
 
 mod = "mod4"
 terminal = "alacritty"
-browser = "firefox"
+browser = "google-chrome-stable"
 promt = "rofi -show run"
 musicPlayer = "spotify LD_PRELOAD=/usr/local/lib/spotify-adblock.so"
 volumUp = "amixer -q sset Master 5%+"
@@ -68,16 +67,6 @@ toggleMpd = (
     "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
 )
 
-bar_is_hidden = False  #flip this if www is your main group
-def toggle_bar(qtile):
-    global bar_is_hidden  #I've commited a python nasty here, but cmd_hide_show_bar() doesn't store bar state so the config has too
-    if bar_is_hidden:
-        qtile.cmd_hide_show_bar("bottom")
-    if not bar_is_hidden:
-        qtile.cmd_hide_show_bar("bottom")
-
-def test_image():
-    lazy.widget["image"].update("~/wallpapers/sakura.jpg")
 
 keys = [
     # A list of available commands that can be bound to keys can be found
@@ -137,11 +126,6 @@ keys = [
     Key([mod], "p", lazy.spawn(screenshot), desc="Reload the config"),
     Key([mod], "o", lazy.spawn(rofi), desc="Move window focus to other window"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
-    Key([mod, "control"], "e", lazy.function(toggle_bar), desc="Shutdown Qtile"),
-    KeyChord([mod], "g", [
-        Key([], "w", lazy.spawn("rofi -show window")),
-        Key([], "r", lazy.spawn("rofi -show run"))
-    ]) 
 ]
 
 # groups = [Group(i) for i in "123456789"]
@@ -151,48 +135,21 @@ groups = [
     Group(
         "1",
         label="一",
-        screen_affinity = 1,
     ),
     Group(
         "2",
         label="二",
-        screen_affinity = 2
     ),
     Group(
         "3",
         label="三",
-        screen_affinity = 3
     ),
     Group(
         "4",
         label="四",
-        screen_affinity = 4,
-        layout="slice",
-        matches=[Match(title="cava")],
-        layouts=[ 
-            layout.Max(
-            ), 
-            layout.Slice(
-                side="bottom",
-                match=Match(title="cava"),
-                width=100
-            ), 
-        ],
-        spawn=[
-            "google-chrome-stable youtube.com",
-        ],
-        persist=False
     ),
-    Group(
-        "5", 
-        label="五", 
-        screen_affinity = 5
-    ),
-    Group(
-        "0", 
-        label="愛",
-        screen_affinity = 5
-    ),
+    Group("5", label="五"),
+    Group("0", label="愛"),
 ]
 
 
@@ -221,14 +178,14 @@ for i in groups:
     )
 
 layouts = [
-    layout.Columns(border_focus="#FF679A", border_width=1, margin=8),
-    layout.Max(border_focus="#FF679A", border_width=1, margin=8),
+    layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4, margin=8),
+    layout.Max(margin=12),
     # Try more layouts by unleashing below layouts.
     # layout.Stack(num_stacks=2),
     # layout.Bsp(),
     # layout.Matrix(),
-    #layout.MonadTall(border_focus="#FF679A", border_width=1, margin=8),
-    #layout.MonadWide(border_focus="#FF679A", border_width=1, margin=8),
+    layout.MonadTall(margin=8, ratio=0.75),
+    # layout.MonadWide(),
     # layout.RatioTile(),
     # layout.Tile(),
     # layout.TreeTab(),
@@ -366,10 +323,7 @@ screensold = [
     ),
 ]
 
-f_screens = []
-for i, group in enumerate(groups):
-    f_screens.append(
-
+screens = [
     Screen(
         top=bar.Bar(
             [
@@ -380,55 +334,48 @@ for i, group in enumerate(groups):
                     padding_y=6,
                     padding_x=6,
                     borderwidth=4,
-                    active=highlightColor,
+                    active=activeColor,
                     # does not have window open text color
-                    inactive="aaaaaa",
-                    rounded=True,
+                    inactive=inactiveColor,
+                    rounded=False,
                     highlight_color="1F2122",
                     highlight_method="line",
                     this_current_screen_border=highlightColor,
-                    other_current_screen_border="1F2122",
-                    other_screen_border="1F2122"
+                    block_highlight_text_color=highlightTextColor,
                 ),
                 widget.Spacer(),
-                widget.TextBox(text=" ", foreground=["#FF679A", "#FFCDAC"] , fontsize="16"),
+                widget.TextBox(text=" ", foreground="#FF679A" , fontsize="16"),
                 Spotify(
                     fontsize=fontSize,
-                    foreground=["#FF679A", "#FFCDAC"]
+                    format="{track}",
+                    foreground="#FF679A"
                 ),
                 widget.Spacer(),
-                widget.TextBox(text="墳 ", foreground=["#00BBDC", "#99CDFF"], fontsize="16"),
+                widget.TextBox(text="墳 ", foreground="#00BBDC", fontsize="16"),
                 widget.PulseVolume(
                     fontsize=fontSize,
-                    foreground=["#00BBDC", "#99CDFF"]
+                    foreground="#00BBDC"
                 ),
                 widget.Spacer(length=20),
-                widget.TextBox(text="", foreground=["#FF7721", "#FFA9CC"] , fontsize="16"),
+                widget.TextBox(text="", foreground="#FF7721" , fontsize="16"),
                 widget.Memory(
                     fontsize=fontSize,
                     measure_mem="G",
-                    foreground=["#FF7721", "#FFA9CC"]
+                    foreground="#FF7721"
                 ),
                 widget.Spacer(length=20),
-                widget.TextBox(text=" ", foreground=["#0077DD", "#9AEEDE"] , fontsize="16"),
+                widget.TextBox(text=" ", foreground="#0077DD" , fontsize="16"),
                 widget.Clock(
                     format="%d/%m/%y %H:%M",
-                    foreground=["#0077DD", "#9AEEDE"]
+                    foreground="#0077DD"
                 ),
-                widget.TextBox(text=" ", foreground=["#0077DD", "#9AEEDE"] , fontsize="16"),
             ],
             32,
             opacity=0.95,
             background="1F2122",
-        ), 
-        x=1920*i,
-        y=0,
-        width=1920,
-        height=1080
+        ),
     ),
-    )
-
-fake_screens = f_screens
+]
 
 # Drag floating layouts.
 mouse = [
@@ -471,7 +418,6 @@ auto_minimize = True
 
 # When using the Wayland backend, this can be used to configure input devices.
 wl_input_rules = None
-
 
 # XXX: Gasp! We're lying here. In fact, nobody really uses or cares about this
 # string besides java UI toolkits; you can see several discussions on the

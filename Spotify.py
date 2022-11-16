@@ -26,6 +26,7 @@ from typing import List
 from libqtile.group import _Group
 from libqtile.config import Screen
 
+from libqtile.lazy import lazy
 from libqtile.widget import base
 
 SPOTIFY = "Spotify"
@@ -40,7 +41,7 @@ class Spotify(base.ThreadPoolText):
         ("play_icon", "", "icon to display when playing music"),
         ("pause_icon", "", "icon to display when music paused"),
         ("update_interval", 0.5, "polling rate in seconds"),
-        ("format", "{icon} {artist}:{album} - {track}", "Spotify display format"),
+        ("format", "{track}", "Spotify display format"),
     ]
 
     def __init__(self, **config) -> None:
@@ -112,19 +113,16 @@ class Spotify(base.ThreadPoolText):
         else:
             vars["icon"] = self.pause_icon
 
-        vars["artist"] = self.artist
-        try:
-            vars["track"] = self.song_title[0:self.song_title.index("(")]
-        except:
-            vars["track"] = self.song_title
+        vars["artist"] = ""
+        vars["track"] =  self.song_title
 
-        vars["album"] = self.album
+
         return self.format.format(**vars)
 
 
     def toggle_music(self) -> None:
         run(
-            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
+            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.chrome /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
             shell=True,
         )
 
@@ -132,7 +130,7 @@ class Spotify(base.ThreadPoolText):
         if proc.stderr.decode("utf-8") != "":
             return (
                 ""
-                if "org.mpris.MediaPlayer2.spotify" in proc.stderr.decode("utf-8")
+                if "org.mpris.MediaPlayer2.chrome" in proc.stderr.decode("utf-8")
                 else proc.stderr.decode("utf-8")
             )
 
@@ -142,23 +140,34 @@ class Spotify(base.ThreadPoolText):
     @property
     def _meta(self) -> str:
         proc = run(
-            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata'",
+            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.chrome /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata'",
             shell=True,
             capture_output=True,
         )
 
         output: str = proc.stdout.decode("utf-8").replace("'", "ʼ").rstrip()
-        return "" if ("org.mpris.MediaPlayer2.spotify" in output) else output
+        return "" if ("org.mpris.MediaPlayer2.chrome" in output) else output
 
     @property
     def artist(self) -> str:
         proc: CompletedProcess = run(
-            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' | grep -m1 'xesam:artist' -b2 | tail -n 1 | grep -o '\".*\"' | sed 's/\"//g' | sed -e 's/&/and/g'",
+            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.chrome /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' | grep -m1 'xesam:artist' -b2 | tail -n 1 | grep -o '\".*\"' | sed 's/\"//g' | sed -e 's/&/and/g'",
             shell=True,
             capture_output=True,
         )
 
         output = self.get_proc_output(proc)
+        return output
+
+    @property
+    def url(self) -> str: 
+        proc = run(
+            f"echo '{self._meta}' | grep -m1 'mpris:artUrl' -b1 | tail -n1 | grep -o '\".*\"' | sed 's/\"//g' | sed -e 's/&/and/g'",
+            shell=True,
+            capture_output=True,
+        )
+
+        output: str = self.get_proc_output(proc)
         return output
 
     @property
@@ -186,7 +195,7 @@ class Spotify(base.ThreadPoolText):
     @property
     def playing(self) -> bool:
         play = run(
-            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'PlaybackStatus' | grep -o Playing",
+            "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.chrome /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'PlaybackStatus' | grep -o Playing",
             shell=True,
             capture_output=True,
         ).stdout.decode("utf-8")
