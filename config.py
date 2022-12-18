@@ -23,22 +23,22 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-from libqtile import bar, layout,  qtile, widget
+from libqtile import bar, layout,  widget
 from libqtile.config import Click, Drag, Group, Key, KeyChord, Match, Screen
 from libqtile.lazy import lazy
-from libqtile.utils import guess_terminal
-from Spotify import Spotify
-from Image import Image
+from widget.music import Spotify
 
 import os
 import subprocess
 from libqtile import hook
-
 from subprocess import run
 
+from Theme.Group.Group import groups
+from Theme.Screen.Screen import f_screens, my_screen
+from Theme.Screen.OldScreen import screensold 
 
-def toggle_music(qtitle):
+
+def toggle_music():
     run(
         "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.chrome /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
         shell=True,
@@ -68,16 +68,21 @@ toggleMpd = (
     "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause",
 )
 
-bar_is_hidden = False  #flip this if www is your main group
+bar_is_hidden = False  # flip this if www is your main group
+
+
 def toggle_bar(qtile):
-    global bar_is_hidden  #I've commited a python nasty here, but cmd_hide_show_bar() doesn't store bar state so the config has too
+    # I've commited a python nasty here, but cmd_hide_show_bar() doesn't store bar state so the config has too
+    global bar_is_hidden
     if bar_is_hidden:
         qtile.cmd_hide_show_bar("bottom")
     if not bar_is_hidden:
         qtile.cmd_hide_show_bar("bottom")
 
+
 def test_image():
     lazy.widget["image"].update("~/wallpapers/sakura.jpg")
+
 
 keys = [
     # A list of available commands that can be bound to keys can be found
@@ -88,7 +93,8 @@ keys = [
     Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
     Key([mod], "j", lazy.layout.next(), desc="Move focus down"),
     Key([mod], "k", lazy.layout.previous(), desc="Move focus up"),
-    Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
+    Key([mod], "space", lazy.layout.next(),
+        desc="Move window focus to other window"),
     # Move windows between left/right columns or move up/down in current stack.
     # Moving out of range in Columns layout will create new coalsamixer lumn.
     Key(
@@ -104,7 +110,8 @@ keys = [
     Key([mod, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
     # Grow windows. If cjurrent window is on the edge of screen and direction
     # will be to screen edge - window would shrink.
-    Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
+    Key([mod, "control"], "h", lazy.layout.grow_left(),
+        desc="Grow window to the left"),
     Key(
         [mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"
     ),
@@ -137,64 +144,18 @@ keys = [
     Key([mod], "p", lazy.spawn(screenshot), desc="Reload the config"),
     Key([mod], "o", lazy.spawn(rofi), desc="Move window focus to other window"),
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
-    Key([mod, "control"], "e", lazy.function(toggle_bar), desc="Shutdown Qtile"),
+    Key([mod, "control"], "e", lazy.function(
+        toggle_bar), desc="Shutdown Qtile"),
     KeyChord([mod], "g", [
         Key([], "w", lazy.spawn("rofi -show window")),
         Key([], "r", lazy.spawn("rofi -show run"))
-    ]) 
+    ])
 ]
 
 # groups = [Group(i) for i in "123456789"]
 
 
-groups = [
-    Group(
-        "1",
-        label="一",
-        screen_affinity = 1,
-    ),
-    Group(
-        "2",
-        label="二",
-        screen_affinity = 2
-    ),
-    Group(
-        "3",
-        label="三",
-        screen_affinity = 3
-    ),
-    Group(
-        "4",
-        label="四",
-        screen_affinity = 4,
-        layout="slice",
-        matches=[Match(title="cava")],
-        layouts=[ 
-            layout.Max(
-            ), 
-            layout.Slice(
-                side="bottom",
-                match=Match(title="cava"),
-                width=100
-            ), 
-        ],
-        spawn=[
-            "google-chrome-stable youtube.com",
-        ],
-        persist=False
-    ),
-    Group(
-        "5", 
-        label="五", 
-        screen_affinity = 5
-    ),
-    Group(
-        "0", 
-        label="愛",
-        screen_affinity = 5
-    ),
-]
-
+groups = groups
 
 for i in groups:
     keys.extend(
@@ -211,7 +172,8 @@ for i in groups:
                 [mod, "shift"],
                 i.name,
                 lazy.window.togroup(i.name, switch_group=True),
-                desc="Switch to & move focused window to group {}".format(i.name),
+                desc="Switch to & move focused window to group {}".format(
+                    i.name),
             ),
             # Or, use below if you prefer not to switch to that group.
             # # mod1 + shift + letter of group = move focused window to group
@@ -227,8 +189,8 @@ layouts = [
     # layout.Stack(num_stacks=2),
     # layout.Bsp(),
     # layout.Matrix(),
-    #layout.MonadTall(border_focus="#FF679A", border_width=1, margin=8),
-    #layout.MonadWide(border_focus="#FF679A", border_width=1, margin=8),
+    # layout.MonadTall(border_focus="#FF679A", border_width=1, margin=8),
+    # layout.MonadWide(border_focus="#FF679A", border_width=1, margin=8),
     # layout.RatioTile(),
     # layout.Tile(),
     # layout.TreeTab(),
@@ -241,12 +203,10 @@ widget_defaults = dict(
     fontsize=16,
     padding=2,
 )
-extension_defaults = widget_defaults.copy()
+
 
 colors = ["#FF7721", "#FF679A", "#00BBDC", "#0077DD"]
-
 bgColor = "#EE1166"
-
 textColor = "#575279"
 # have window open text color
 activeColor = "#ffffff"
@@ -256,180 +216,9 @@ inactiveColor = "#b3b1b1"
 highlightColor = colors[1]
 highlightTextColor = "#ffffff"
 fontSize = 16
-
-
-def wrapWidget(widgets, bgColor, icon=""):
-    return [
-        widget.TextBox(text="", foreground=bgColor, padding=0, fontsize="30"),
-        widget.TextBox(
-            text=icon,
-            background=bgColor,
-        ),
-        *widgets,
-        widget.TextBox(text=" ", foreground=bgColor, padding=0, fontsize="30"),
-    ]
-
-
-def wrapWidget2(widgets, bgColor, fgColor, icon=""):
-    return [
-        widget.TextBox(
-            text=" ", foreground=fgColor, background=bgColor, padding=0, fontsize="30"
-        ),
-        widget.TextBox(
-            text=icon,
-            background=fgColor,
-        ),
-        *widgets,
-    ]
-
-
-screensold = [
-    Screen(
-        top=bar.Bar(
-            [
-                widget.GroupBox(
-                    fontsize=fontSize,
-                    margin_y=3,
-                    margin_x=6,
-                    padding_y=7,
-                    padding_x=6,
-                    borderwidth=4,
-                    active=activeColor,
-                    # does not have window open text color
-                    inactive=inactiveColor,
-                    rounded=False,
-                    highlight_color=inactiveColor,
-                    highlight_method="block",
-                    this_current_screen_border=highlightColor,
-                    block_highlight_text_color=highlightTextColor,
-                ),
-                widget.Spacer(),
-                *(
-                    wrapWidget2(
-                        [
-                            Spotify(
-                                fontsize=fontSize,
-                                background=colors[1],
-                                format="{track}",
-                            ),
-                        ],
-                        "",
-                        colors[1],
-                        " ",
-                    )
-                ),
-                *(
-                    wrapWidget2(
-                        [
-                            widget.PulseVolume(
-                                fontsize=fontSize,
-                                background=colors[2],
-                            ),
-                        ],
-                        colors[1],
-                        colors[2],
-                        "墳",
-                    )
-                ),
-                *(
-                    wrapWidget2(
-                        [
-                            widget.Memory(
-                                fontsize=fontSize,
-                                background=colors[3],
-                            ),
-                        ],
-                        colors[2],
-                        colors[3],
-                        "", 
-                    )
-                ),
-                *(
-                    wrapWidget2(
-                        [
-                            widget.Clock(
-                                format="%d/%m/%y %H:%M",
-                                background=colors[0],
-                            ),
-                        ],
-                        colors[3],
-                        colors[0],
-                        " ",
-                    )
-                ),
-            ],
-            32,
-            opacity=0.95,
-            background=bgColor,
-            # margin=[8,2,0,2]
-        ),
-    ),
-]
-
-f_screens = []
-for i, group in enumerate(groups):
-    f_screens.append(
-
-    Screen(
-        top=bar.Bar(
-            [
-                widget.GroupBox(
-                    fontsize=fontSize,
-                    margin_y=3,
-                    margin_x=6,
-                    padding_y=6,
-                    padding_x=6,
-                    borderwidth=4,
-                    active=highlightColor,
-                    # does not have window open text color
-                    inactive="aaaaaa",
-                    rounded=True,
-                    highlight_color="1F2122",
-                    highlight_method="line",
-                    this_current_screen_border=highlightColor,
-                    other_current_screen_border="1F2122",
-                    other_screen_border="1F2122"
-                ),
-                widget.Spacer(),
-                widget.TextBox(text=" ", foreground=["#FF679A", "#FFCDAC"] , fontsize="16"),
-                Spotify(
-                    fontsize=fontSize,
-                    foreground=["#FF679A", "#FFCDAC"]
-                ),
-                widget.Spacer(),
-                widget.TextBox(text="墳 ", foreground=["#00BBDC", "#99CDFF"], fontsize="16"),
-                widget.PulseVolume(
-                    fontsize=fontSize,
-                    foreground=["#00BBDC", "#99CDFF"]
-                ),
-                widget.Spacer(length=20),
-                widget.TextBox(text="", foreground=["#FF7721", "#FFA9CC"] , fontsize="16"),
-                widget.Memory(
-                    fontsize=fontSize,
-                    measure_mem="G",
-                    foreground=["#FF7721", "#FFA9CC"]
-                ),
-                widget.Spacer(length=20),
-                widget.TextBox(text=" ", foreground=["#0077DD", "#9AEEDE"] , fontsize="16"),
-                widget.Clock(
-                    format="%d/%m/%y %H:%M",
-                    foreground=["#0077DD", "#9AEEDE"]
-                ),
-                widget.TextBox(text=" ", foreground=["#0077DD", "#9AEEDE"] , fontsize="16"),
-            ],
-            32,
-            opacity=0.95,
-            background="1F2122",
-        ), 
-        x=1920*i,
-        y=0,
-        width=1920,
-        height=1080
-    ),
-    )
-
-fake_screens = f_screens
-
+#fake_screens = f_screens
+#screens = screensold
+screens = my_screen
 # Drag floating layouts.
 mouse = [
     Drag(
